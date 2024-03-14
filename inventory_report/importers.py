@@ -15,6 +15,22 @@ class Importer(ABC):
 
 
 class JsonImporter(Importer):
+    def import_data(self) -> list[Product]:
+        with open(self.path, "r") as file:
+            data = json.load(file)
+        return [
+            Product(
+                product["id"],
+                product["product_name"],
+                product["company_name"],
+                product["manufacturing_date"],
+                product["expiration_date"],
+                product["serial_number"],
+                product["storage_instructions"],
+            )
+            for product in data
+        ]
+
 
 class CsvImporter:
     pass
