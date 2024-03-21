@@ -6,46 +6,71 @@ from inventory_report.inventory import Inventory
 
 
 class SimpleReport:
+    """
+    Class responsible for generating a simple report
+    with information about the inventory.
+
+    Attributes:
+    stocks (list): List of products in the inventory.
+    _company_inventory_count (defaultdict): Dictionary storing the number
+    of products per company.
+
+    Methods:
+    add_inventory(inventory): Adds an inventory to the inventory.
+    find_company_with_largest_inventory(): Finds the company with
+    the largest inventory.
+    generate(): Generates the report with inventory information.
+    """
+
     def __init__(self):
         self.stocks = []
         self._company_inventory_count = defaultdict(int)
 
     def add_inventory(self, inventory: Inventory):
+        """
+        Adds an inventory to the inventory.
+
+        Parameters:
+        inventory (Inventory): Inventory object containing the
+        products to be added to the inventory.
+        """
         if isinstance(inventory, Inventory):
             self.stocks.extend(inventory.data)
 
     def find_company_with_largest_inventory(self):
-        # Dicionário para armazenar o número de produtos por empresa
+        """
+        Finds the company with the largest inventory.
+
+        Returns:
+        tuple: A tuple containing the name of the company with the largest
+        inventory and the inventory count.
+        """
         company_inventory_count = defaultdict(int)
 
-        # Iterar sobre cada inventário
         for product in self.stocks:
-            # Incrementar o contador de inventário para
-            # a empresa do produto atual
             company_inventory_count[product.company_name] += 1
 
         self._company_inventory_count = company_inventory_count
 
-        # Encontrar a empresa com o maior estoque
         company_with_largest_inventory = max(
             company_inventory_count,
-            key=lambda k: int(company_inventory_count[k])
+            key=lambda k: int(company_inventory_count[k]),
         )
 
-        # Retorna o nome da empresa com o
-        # maior estoque e a contagem de inventário
         return (
             company_with_largest_inventory,
             company_inventory_count[company_with_largest_inventory],
         )
 
     def generate(self):
-        oldest_manufacturing_date = min(
-            [
-                product.manufacturing_date
-                for product in self.stocks
+        """
+        Generates the report with inventory information.
 
-            ]
+        Returns:
+        str: The generated report.
+        """
+        oldest_manufacturing_date = min(
+            [product.manufacturing_date for product in self.stocks]
         )
         closest_expiration_date = min(
             [
