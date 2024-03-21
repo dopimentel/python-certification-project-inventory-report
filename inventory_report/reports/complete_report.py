@@ -7,7 +7,7 @@ class CompleteReport(SimpleReport):
     def generate(self) -> str:
         report = super().generate()
         report += "Stocked products by company:\n"
-        for company, count in self.company_inventory_count.items():
+        for company, count in self._company_inventory_count.items():
             report += f"- {company}: {count}\n"
         return report
 

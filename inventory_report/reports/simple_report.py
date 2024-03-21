@@ -8,25 +8,23 @@ from inventory_report.inventory import Inventory
 class SimpleReport:
     def __init__(self):
         self.stocks = []
-        self.company_inventory_count = defaultdict(int)
+        self._company_inventory_count = defaultdict(int)
 
     def add_inventory(self, inventory: Inventory):
         if isinstance(inventory, Inventory):
-            self.stocks.append(inventory)
+            self.stocks.extend(inventory.data)
 
     def find_company_with_largest_inventory(self):
         # Dicionário para armazenar o número de produtos por empresa
         company_inventory_count = defaultdict(int)
 
         # Iterar sobre cada inventário
-        for inventory in self.stocks:
-            # Iterar sobre cada produto no inventário
-            for product in inventory.data:
-                # Incrementar o contador de inventário para
-                # a empresa do produto atual
-                company_inventory_count[product.company_name] += 1
+        for product in self.stocks:
+            # Incrementar o contador de inventário para
+            # a empresa do produto atual
+            company_inventory_count[product.company_name] += 1
 
-        self.company_inventory_count = company_inventory_count
+        self._company_inventory_count = company_inventory_count
 
         # Encontrar a empresa com o maior estoque
         company_with_largest_inventory = max(
@@ -45,15 +43,14 @@ class SimpleReport:
         oldest_manufacturing_date = min(
             [
                 product.manufacturing_date
-                for inventory in self.stocks
-                for product in inventory.data
+                for product in self.stocks
+
             ]
         )
         closest_expiration_date = min(
             [
                 product.expiration_date
-                for inventory in self.stocks
-                for product in inventory.data
+                for product in self.stocks
                 if datetime.strptime(product.expiration_date, "%Y-%m-%d")
                 > datetime.now()
             ]
