@@ -32,8 +32,23 @@ class JsonImporter(Importer):
         ]
 
 
-class CsvImporter:
-    pass
+class CsvImporter(Importer):
+    def import_data(self) -> list[Product]:
+        with open(self.path, "r") as file:
+            data = file.readlines()
+        data = data[1:]
+        return [
+            Product(
+                product[0],
+                product[1],
+                product[2],
+                product[3],
+                product[4],
+                product[5],
+                product[6],
+            )
+            for product in map(lambda x: x.strip().split(","), data)
+        ]
 
 
 # Não altere a variável abaixo
@@ -47,4 +62,9 @@ if __name__ == "__main__":
     imp = JsonImporter("inventory_report/data/inventory.json")
     products = imp.import_data()
     for product in products:
+        print(product)
+
+    imp_csv = CsvImporter("inventory_report/data/inventory.csv")
+    products_csv = imp_csv.import_data()
+    for product in products_csv:
         print(product)
