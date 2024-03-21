@@ -1,84 +1,76 @@
-from datetime import datetime, timedelta
-from typing import List
+from collections import defaultdict
+from datetime import datetime
+
+from inventory_report.importers import JsonImporter
+from inventory_report.inventory import Inventory
 
 
 class SimpleReport:
     def __init__(self):
-        self.inventories = []
+        self.stocks = []
 
-    def add_inventory(self, inventory):
-        """
-        Adiciona um estoque à lista de estoques.
-        """
-        self.inventories.append(inventory)
+    def add_inventory(self, inventory: Inventory):
+        if isinstance(inventory, Inventory):
+            self.stocks.append(inventory)
 
-    def generate(self):
-        """
-        Gera o relatório conforme as especificações.
-        """
-        # Encontrar a data de fabricação mais antiga
-        oldest_manufacturing_date = self.find_oldest_manufacturing_date()
+    def find_company_with_largest_inventory(self):
+        # Dicionário para armazenar o número de produtos por empresa
+        company_inventory_count = defaultdict(int)
 
-        # Encontrar a data de validade mais próxima
-        closest_expiration_date = self.find_closest_expiration_date()
+        # Iterar sobre cada inventário
+        for inventory in self.stocks:
+            # Iterar sobre cada produto no inventário
+            for product in inventory.data:
+                # Incrementar o contador de inventário para
+                # a empresa do produto atual
+                company_inventory_count[product.company_name] += 1
 
         # Encontrar a empresa com o maior estoque
-        company_with_largest_inventory = self.find_company_with_largest_inventory()
-
-        # Formatar o relatório
-        report = (
-            f"Oldest manufacturing date: {oldest_manufacturing_date}\n"
-            f"Closest expiration date: {closest_expiration_date}\n"
-            f"Company with the largest inventory: {company_with_largest_inventory}"
+        company_with_largest_inventory = max(
+            company_inventory_count,
+            key=lambda k: int(company_inventory_count[k])
         )
+
+        # Retorna o nome da empresa com o
+        # maior estoque e a contagem de inventário
+        return (
+            company_with_largest_inventory,
+            company_inventory_count[company_with_largest_inventory],
+        )
+
+    def generate(self):
+        oldest_manufacturing_date = min(
+            [
+                product.manufacturing_date
+                for inventory in self.stocks
+                for product in inventory.data
+            ]
+        )
+        closest_expiration_date = min(
+            [
+                product.expiration_date
+                for inventory in self.stocks
+                for product in inventory.data
+                if datetime.strptime(product.expiration_date, "%Y-%m-%d")
+                > datetime.now()
+            ]
+        )
+        company_with_largest_inventory = (
+            self.find_company_with_largest_inventory()[0]
+        )
+        report = f"Oldest manufacturing date: {oldest_manufacturing_date}\n"
+        report += f"Closest expiration date: {closest_expiration_date}\n"
+        report += "Company with the largest inventory: "
+        report += f"{company_with_largest_inventory}"
 
         return report
 
-    def find_oldest_manufacturing_date(self):
-        """
-        Encontra a data de fabricação mais antiga entre todos os estoques.
-        """
-        if not self.inventories:
-            return None
 
-        oldest_date = datetime.now()
-        for inventory in self.inventories:
-            for product in inventory.products:
-                if product.manufacturing_date < oldest_date:
-                    oldest_date = product.manufacturing_date
-
-        return oldest_date.strftime('%Y-%m-%d')
-
-    def find_closest_expiration_date(self):
-        """
-        Encontra a data de validade mais próxima entre todos os estoques.
-        """
-        if not self.inventories:
-            return None
-
-        today = datetime.now()
-        closest_date = None
-        for inventory in self.inventories:
-            for product in inventory.products:
-                if product.expiration_date > today:
-                    if closest_date is None or product.expiration_date < closest_date:
-                        closest_date = product.expiration_date
-
-        return closest_date.strftime('%Y-%m-%d') if closest_date else None
-
-    def find_company_with_largest_inventory(self):
-        """
-        Encontra a empresa com o maior estoque.
-        """
-        if not self.inventories:
-            return None
-
-        company_inventory = {}
-        for inventory in self.inventories:
-            if inventory.company_name in company_inventory:
-                company_inventory[inventory.company_name] += len(inventory.products)
-            else:
-                company_inventory[inventory.company_name] = len(inventory.products)
-
-        max_inventory_company = max(company_inventory, key=company_inventory.get)
-        return max_inventory_company
+if __name__ == "__main__":
+    list_products = JsonImporter(
+        "inventory_report/data/inventory.json"
+    ).import_data()
+    inventory = Inventory(list_products)
+    report = SimpleReport()
+    report.add_inventory(inventory)
+    print(report.generate())
