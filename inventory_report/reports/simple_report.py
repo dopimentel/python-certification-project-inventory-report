@@ -8,6 +8,7 @@ from inventory_report.inventory import Inventory
 class SimpleReport:
     def __init__(self):
         self.stocks = []
+        self.company_inventory_count = defaultdict(int)
 
     def add_inventory(self, inventory: Inventory):
         if isinstance(inventory, Inventory):
@@ -24,6 +25,8 @@ class SimpleReport:
                 # Incrementar o contador de inventário para
                 # a empresa do produto atual
                 company_inventory_count[product.company_name] += 1
+
+        self.company_inventory_count = company_inventory_count
 
         # Encontrar a empresa com o maior estoque
         company_with_largest_inventory = max(
@@ -61,7 +64,7 @@ class SimpleReport:
         report = f"Oldest manufacturing date: {oldest_manufacturing_date}\n"
         report += f"Closest expiration date: {closest_expiration_date}\n"
         report += "Company with the largest inventory: "
-        report += f"{company_with_largest_inventory}"
+        report += f"{company_with_largest_inventory}\n"
 
         return report
 
